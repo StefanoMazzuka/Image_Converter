@@ -18,15 +18,15 @@
         <div id="tools" style="display:none;">
             <div style="margin:12px 0;">
                 <button id="pipette-toggle-btn">Activate Pipette</button>
-                <label>Select color: <input type="color" id="color-picker" /></label>
+                <label><input type="color" id="color-picker" /></label>
                 <span id="picked-rgb"></span>
             </div>
             <div style="margin:12px 0;">
                 <label>Tolerance: <input type="range" id="tolerance-slider" min="0" max="100" value="20" /></label>
-                <span id="tolerance-value">20</span>
+                <span id="tolerance-value">20</span>%
             </div>
             <button id="remove-color-btn" class="action-btn">Remove color</button>
-            <button id="convert-ico-btn" class="action-btn">Convert to icon</button>
+            <!-- Download buttons will be appended after processing -->
         </div>
     </div>
     <script src="main.js"></script>

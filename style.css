@@ -58,14 +58,11 @@ h1 {
     font-size: 15px;
     cursor: pointer;
     margin: 8px 6px;
-    transition: background 0.2s, box-shadow 0.2s;
+    transition: background-color 0.2s, box-shadow 0.2s;
     box-shadow: 0 1px 3px rgba(0,0,0,0.07);
 }
 .action-btn:hover, #pipette-toggle-btn:hover {
     background: #005fa3;
-}
-#pipette-toggle-btn.active {
-    background: #ff9800;
 }
 #preview-wrapper {
     display: flex;
@@ -74,6 +71,28 @@ h1 {
     min-height: 120px;
 }
 #preview.pipette-cursor {
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M6 26l20-20-2-2-20 20v2h2zm2.5-1.5l14-14 1 1-14 14-1-1zm15.5-15.5l1-1c.2-.2.2-.5 0-.7l-2-2c-.2-.2-.5-.2-.7 0l-1 1 2.7 2.7z" fill="%230078d7"/></svg>') 0 32, crosshair;
+    /* Use pipette.ico as the cursor, hotspot at bottom-left tip of the pipette */
+    cursor: url('pipette.ico') 0 64, crosshair;
+}
+#pipette-toggle-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: #0078d7;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+#pipette-toggle-btn img {
+    width: 24px;
+    height: 24px;
+    display: block;
+    content: url('pipette.png');
 }
 #generate-btn, #generate-btn:disabled { display: none; }
+#pipette-toggle-btn.active {
+    background: #ff9800;
+    box-shadow: 0 0 0 3px #ffe0b2;
+    border: 2px solid #ff9800;
+}
