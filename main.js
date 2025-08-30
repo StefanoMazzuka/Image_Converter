@@ -53,16 +53,18 @@ dropArea.addEventListener('drop', (e) => {
 });
 
 // Pipette toggle
+pipetteToggleBtn.innerHTML = '<img src="pipette.png" alt="Pipette" />';
+
 pipetteToggleBtn.addEventListener('click', function() {
     pipetteActive = !pipetteActive;
     if (pipetteActive) {
         previewImg.classList.add('pipette-cursor');
         pipetteToggleBtn.classList.add('active');
-        pipetteToggleBtn.textContent = 'Deactivate Pipette';
+        pipetteToggleBtn.innerHTML = '<img src="pipette.png" alt="Deactivate Pipette" />';
     } else {
         previewImg.classList.remove('pipette-cursor');
         pipetteToggleBtn.classList.remove('active');
-        pipetteToggleBtn.textContent = 'Activate Pipette';
+        pipetteToggleBtn.innerHTML = '<img src="pipette.png" alt="Activate Pipette" />';
     }
 });
 
@@ -84,7 +86,7 @@ previewImg.addEventListener('click', function(e) {
     pipetteActive = false;
     previewImg.classList.remove('pipette-cursor');
     pipetteToggleBtn.classList.remove('active');
-    pipetteToggleBtn.textContent = 'Activate Pipette';
+    pipetteToggleBtn.innerHTML = '<img src="pipette.png" alt="Activate Pipette" />';
 });
 
 toleranceSlider.addEventListener('input', function() {
@@ -95,6 +97,8 @@ toleranceSlider.addEventListener('input', function() {
 // Add result image and download button
 let resultImg = document.getElementById('result-img');
 let downloadResultBtn = document.getElementById('download-result-btn');
+let downloadIcoBtn = document.getElementById('download-ico-btn');
+let originalToIcoBtn = document.getElementById('original-to-ico-btn');
 if (!resultImg) {
     resultImg = document.createElement('img');
     resultImg.id = 'result-img';
@@ -111,10 +115,27 @@ if (!resultImg) {
 if (!downloadResultBtn) {
     downloadResultBtn = document.createElement('button');
     downloadResultBtn.id = 'download-result-btn';
-    downloadResultBtn.textContent = 'Download Image';
+    downloadResultBtn.textContent = 'Download PNG';
     downloadResultBtn.className = 'action-btn';
     downloadResultBtn.style.display = 'none';
     document.querySelector('.container').appendChild(downloadResultBtn);
+}
+if (!downloadIcoBtn) {
+    downloadIcoBtn = document.createElement('button');
+    downloadIcoBtn.id = 'download-ico-btn';
+    downloadIcoBtn.textContent = 'Download ICO';
+    downloadIcoBtn.className = 'action-btn';
+    downloadIcoBtn.style.display = 'none';
+    document.querySelector('.container').appendChild(downloadIcoBtn);
+}
+if (!originalToIcoBtn) {
+    originalToIcoBtn = document.createElement('button');
+    originalToIcoBtn.id = 'original-to-ico-btn';
+    originalToIcoBtn.className = 'action-btn';
+    originalToIcoBtn.style.marginLeft = '8px';
+    originalToIcoBtn.title = 'Convert original image to ICO';
+    originalToIcoBtn.textContent = 'Download ICO';
+    removeColorBtn.parentNode.insertBefore(originalToIcoBtn, removeColorBtn.nextSibling);
 }
 let lastResultBlob = null;
 
@@ -142,6 +163,7 @@ removeColorBtn.addEventListener('click', function() {
             resultImg.src = URL.createObjectURL(blob);
             resultImg.style.display = 'block';
             downloadResultBtn.style.display = 'inline-block';
+            downloadIcoBtn.style.display = 'inline-block';
         }, 'image/png');
     };
     img.src = URL.createObjectURL(droppedFile);
@@ -158,8 +180,43 @@ downloadResultBtn.addEventListener('click', function() {
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
 });
-
-convertIcoBtn.addEventListener('click', function() {
+downloadIcoBtn.addEventListener('click', function() {
+    if (!droppedFile || !lastResultBlob) return;
+    let baseName = droppedFile ? droppedFile.name.replace(/\.[^/.]+$/, "") : "icon";
+    const img = new window.Image();
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, 64, 64);
+        canvas.toBlob(function(pngBlob) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const pngArray = new Uint8Array(e.target.result);
+                const icoHeader = new Uint8Array([
+                    0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x40, 0x40, 0x00, 0x00, 0x01, 0x00, 0x20, 0x00,
+                    pngArray.length & 0xFF, (pngArray.length >> 8) & 0xFF, (pngArray.length >> 16) & 0xFF, (pngArray.length >> 24) & 0xFF,
+                    22, 0, 0, 0
+                ]);
+                const icoArray = new Uint8Array(icoHeader.length + pngArray.length);
+                icoArray.set(icoHeader, 0);
+                icoArray.set(pngArray, icoHeader.length);
+                const icoBlob = new Blob([icoArray], {type: 'image/x-icon'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(icoBlob);
+                link.download = baseName + '_removed_color.ico';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            };
+            reader.readAsArrayBuffer(pngBlob);
+        }, 'image/png');
+    };
+    img.src = URL.createObjectURL(lastResultBlob);
+});
+originalToIcoBtn.addEventListener('click', function() {
     if (!droppedFile) return;
     let baseName = droppedFile ? droppedFile.name.replace(/\.[^/.]+$/, "") : "icon";
     const img = new window.Image();
@@ -169,15 +226,28 @@ convertIcoBtn.addEventListener('click', function() {
         canvas.height = 64;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, 64, 64);
-        canvas.toBlob(function(blob) {
-            // Use .ico extension, but browser will save as PNG. For real .ico, need server or lib.
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = baseName + '.ico';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
+        canvas.toBlob(function(pngBlob) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const pngArray = new Uint8Array(e.target.result);
+                const icoHeader = new Uint8Array([
+                    0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x40, 0x40, 0x00, 0x00, 0x01, 0x00, 0x20, 0x00,
+                    pngArray.length & 0xFF, (pngArray.length >> 8) & 0xFF, (pngArray.length >> 16) & 0xFF, (pngArray.length >> 24) & 0xFF,
+                    22, 0, 0, 0
+                ]);
+                const icoArray = new Uint8Array(icoHeader.length + pngArray.length);
+                icoArray.set(icoHeader, 0);
+                icoArray.set(pngArray, icoHeader.length);
+                const icoBlob = new Blob([icoArray], {type: 'image/x-icon'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(icoBlob);
+                link.download = baseName + '.ico';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            };
+            reader.readAsArrayBuffer(pngBlob);
         }, 'image/png');
     };
     img.src = URL.createObjectURL(droppedFile);
